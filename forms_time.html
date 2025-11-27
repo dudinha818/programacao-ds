@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Time do Coração - Formulário com Diálogo</title>
+  <style>
+    :root {
+      --bg: #f7f7f9;
+      --card: #ffffff;
+      --text: #222;
+      --muted: #666;
+      --primary: #0b5ed7;
+      --primary-contrast: #fff;
+      --border: #e5e7eb;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      display: grid;
+      place-items: center;
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 560px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+      padding: 20px;
+    }
+
+    h1 {
+      font-size: 1.4rem;
+      margin: 0 0 16px 0;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 12px;
+      align-items: center;
+    }
+
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--text);
+    }
+
+    button {
+      padding: 10px 16px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--text);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    button.primary {
+      background: var(--primary);
+      color: var(--primary-contrast);
+      border-color: var(--primary);
+    }
+
+    button:hover {
+      filter: brightness(0.98);
+      transform: translateY(-1px);
+    }
+
+    .hint {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    dialog {
+      border: none;
+      border-radius: 12px;
+      padding: 0;
+      width: 90%;
+      max-width: 520px;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.18);
+    }
+
+    .dialog-body {
+      padding: 20px;
+    }
+
+    .dialog-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      font-weight: 700;
+      background: #fafafa;
+      border-radius: 12px 12px 0 0;
+    }
+
+    .dialog-footer {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      padding: 16px 20px;
+      border-top: 1px solid var(--border);
+      background: #fafafa;
+      border-radius: 0 0 12px 12px;
+    }
+
+    .list {
+      margin: 0;
+      padding-left: 18px;
+    }
+
+    .empty {
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    .close-x {
+      float: right;
+      background: transparent;
+      border: none;
+      font-size: 1rem;
+      cursor: pointer;
+      color: var(--muted);
+    }
+
+    @media (max-width: 480px) {
+      .row {
+        grid-template-columns: 1fr;
+      }
+      button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="card" role="form" aria-labelledby="titulo">
+    <h1 id="titulo">Qual o seu Time do Coração?</h1>
+
+    <div>
+      <label for="time">Selecione um time</label>
+      <div class="row">
+        <select id="time" name="time" aria-label="Time do coração">
+          <option value="Botafogo" selected>Botafogo</option>
+          <option value="Flamengo">Flamengo</option>
+          <option value="Fluminense">Fluminense</option>
+          <option value="Vasco da Gama">Vasco da Gama</option>
+        </select>
+
+        <button id="enviar" class="primary" type="button" aria-label="Enviar seleção">
+          Enviar
+        </button>
+        <button id="cancelar" type="button" aria-label="Cancelar">
+          Cancelar
+        </button>
+      </div>
+
+      <p class="hint">Ao enviar, o time é adicionado à lista e mostrado na caixa de diálogo.</p>
+    </div>
+  </main>
+
+  <dialog id="dialogo">
+    <div class="dialog-header">
+      Lista de times cadastrados
+      <button class="close-x" aria-label="Fechar diálogo" title="Fechar">✕</button>
+    </div>
+    <div class="dialog-body">
+      <p id="status" class="empty">Nenhum time cadastrado ainda.</p>
+      <ol id="lista" class="list" hidden></ol>
+    </div>
+    <div class="dialog-footer">
+      <button id="fechar" type="button">Fechar</button>
+      <button id="limpar" type="button">Limpar lista</button>
+    </div>
+  </dialog>
+
+  <script>
+    // Estado simples em memória
+    const times = [];
+
+    // Elementos
+    const select = document.getElementById('time');
+    const btnEnviar = document.getElementById('enviar');
+    const btnCancelar = document.getElementById('cancelar');
+
+    const dialogo = document.getElementById('dialogo');
+    const btnFecharX = dialogo.querySelector('.close-x');
+    const btnFechar = document.getElementById('fechar');
+    const btnLimpar = document.getElementById('limpar');
+    const lista = document.getElementById('lista');
+    const status = document.getElementById('status');
+
+    // Funções utilitárias
+    function atualizarLista() {
+      lista.innerHTML = '';
+
+      if (times.length === 0) {
+        status.textContent = 'Nenhum time cadastrado ainda.';
+        status.classList.add('empty');
+        lista.hidden = true;
+        return;
+      }
+
+      status.textContent = `Total: ${times.length}`;
+      status.classList.remove('empty');
+      lista.hidden = false;
+
+      times.forEach((t, idx) => {
+        const li = document.createElement('li');
+        li.textContent = t;
+        li.setAttribute('aria-label', `Item ${idx + 1}: ${t}`);
+        lista.appendChild(li);
+      });
+    }
+
+    function abrirDialogo() {
+      atualizarLista();
+      dialogo.showModal();
+    }
+
+    function fecharDialogo() {
+      dialogo.close();
+    }
+
+    // Eventos de interação
+    btnEnviar.addEventListener('click', () => {
+      const valor = select.value.trim();
+      if (!valor) return;
+
+      times.push(valor);
+      abrirDialogo();
+    });
+
+    btnCancelar.addEventListener('click', () => {
+      select.selectedIndex = 0; // volta ao primeiro item
+      fecharDialogo();
+    });
+
+    btnFechar.addEventListener('click', fecharDialogo);
+    btnFecharX.addEventListener('click', fecharDialogo);
+
+    btnLimpar.addEventListener('click', () => {
+      times.length = 0;
+      atualizarLista();
+    });
+
+    // Fecha com tecla ESC
+    dialogo.addEventListener('cancel', (e) => {
+      e.preventDefault(); // evita fechar sem atualizar
+      fecharDialogo();
+    });
+  </script>
+</body>
+</html>
