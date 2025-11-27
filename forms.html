@@ -6,7 +6,10 @@
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; }
     input, select, button { margin: 5px 0; display: block; width: 300px; }
-    #listBoxClientes { height: 100px; }
+    #listBoxClientes { height: 120px; }
+    .actions { display: flex; gap: 8px; width: 300px; }
+    .actions button { width: auto; flex: 1; }
+    .error { color: red; font-size: 0.9em; }
   </style>
 </head>
 <body>
@@ -14,45 +17,34 @@
 
   <label for="listBoxClientes">Clientes:</label>
   <select id="listBoxClientes" size="5"></select>
-  <button onclick="buscarCliente()">Buscar Cliente</button>
+
+  <div class="actions">
+    <button id="btnBuscar">Buscar Cliente</button>
+    <button id="btnIncluir">Incluir Cliente</button>
+    <button id="btnAlterar">Alterar Cliente</button>
+  </div>
 
   <h3>Dados do Cliente</h3>
   <input type="text" id="txtNome" placeholder="Nome">
   <input type="text" id="txtEndereco" placeholder="Endereço">
   <input type="text" id="txtTelefone" placeholder="Telefone">
   <input type="email" id="txtEmail" placeholder="Email">
+  <div class="error" id="msgErro" aria-live="polite"></div>
 
   <script>
-    // Simulação de banco de dados local
-    const clientes = [
-      { id: 1, nome: "João Silva", endereco: "Rua A", telefone: "123456", email: "joao@gmail.com" },
-      { id: 2, nome: "Maria Oliveira", endereco: "Rua B", telefone: "654321", email: "maria@gmail.com" }
-    ];
+    // Inicialização do "banco" de clientes no localStorage (mantém se já existir)
+    const STORAGE_KEY = "clientes";
+    let clientes = [];
 
-    // Salvar no localStorage
-    localStorage.setItem("clientes", JSON.stringify(clientes));
+    function carregarClientesDoStorage() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        try {
+          clientes = JSON.parse(raw) || [];
+        } catch (e) {
+          console.error("Erro ao parsear clientes do storage:", e);
+          clientes = [];
+        }
+      } else {
+        // Dados iniciais de exemplo somente se não existir nada no storage
 
-    // Preencher lista de clientes
-    const listBox = document.getElementById("listBoxClientes");
-    const listaClientes = JSON.parse(localStorage.getItem("clientes"));
-    listaClientes.forEach(cliente => {
-      const option = document.createElement("option");
-      option.value = cliente.id;
-      option.textContent = `${cliente.id} - ${cliente.nome}`;
-      listBox.appendChild(option);
-    });
-
-    // Buscar cliente e preencher formulário
-    function buscarCliente() {
-      const selectedId = parseInt(listBox.value);
-      const cliente = listaClientes.find(c => c.id === selectedId);
-      if (cliente) {
-        document.getElementById("txtNome").value = cliente.nome;
-        document.getElementById("txtEndereco").value = cliente.endereco;
-        document.getElementById("txtTelefone").value = cliente.telefone;
-        document.getElementById("txtEmail").value = cliente.email;
-      }
-    }
-  </script>
-</body>
-</html>
